@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixelZap ⚡</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f8ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+    #uploader {
+      background: white;
+      border: 2px dashed #007bff;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+      cursor: pointer;
+    }
+    input[type='file'] {
+      display: none;
+    }
+    #preview {
+      margin-top: 1rem;
+      max-width: 100%;
+      height: auto;
+    }
+    select, button {
+      padding: 0.6rem;
+      margin-top: 1rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>PixelZap ⚡</h1>
+  <label id="uploader">
+    <strong>Click to upload an image</strong>
+    <input type="file" id="imageInput" accept="image/*" />
+  </label>
+  <div id="info" style="display:none;">
+    <img id="preview" src="" alt="Preview" />
+    <br />
+    <select id="formatSelect">
+      <option value="image/png">Convert to PNG</option>
+      <option value="image/jpeg">Convert to JPG</option>
+      <option value="image/webp">Convert to WEBP</option>
+      <option value="image/gif">Convert to GIF</option>
+    </select>
+    <br />
+    <button onclick="convertImage()">Convert & Download</button>
+  </div>
+
+  <script>
+    let imageFile;
+    const input = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const info = document.getElementById('info');
+
+    input.addEventListener('change', () => {
+      imageFile = input.files[0];
+      if (!imageFile) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = reader.result;
+        info.style.display = 'block';
+      };
+      reader.readAsDataURL(imageFile);
+    });
+
+    function convertImage() {
+      const format = document.getElementById('formatSelect').value;
+      const img = new Image();
+      img.src = preview.src;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          const link = document.createElement('a');
+          link.download = `converted.${format.split('/')[1]}`;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, format);
+      };
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
